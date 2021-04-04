@@ -1,4 +1,7 @@
 #!/bin/python3
+"""
+Implementation of one-dimensional midpoint displacement algorithm for fractal terrain generation.
+"""
 import random
 import sys
 from collections import namedtuple
@@ -13,25 +16,27 @@ IMAGE_HEIGHT = 256
 IMAGE_FILL = 32
 
 def generate_heights(roughness, H):
+    """ Generate a 1D heightmap using midpoint displacement """
     points = [Point(0, IMAGE_HEIGHT), Point(IMAGE_WIDTH - 1, IMAGE_HEIGHT)]
     next_points = []
 
     while points[0].x + points[1].x > 2:
         next_points = [points[0]]
         for i in range(0, len(points) - 1):
+            # calculate midpoint of points[i] and points[i +1]
             midpoint_x = (points[i].x + points[i + 1].x)/2
-            midpoint_y = (points[i].y + points[i + 1].y)/2
-            next_points.append(
-                    Point(midpoint_x, midpoint_y + random.randint(-roughness, roughness))
-                )
+            # the height of the midpoint is displaced by a random number between [-roughness, roughness]
+            midpoint_y = (points[i].y + points[i + 1].y)/2 + random.randint(-roughness, roughness)
+            next_points.append(Point(midpoint_x, midpoint_y))
             next_points.append(points[i + 1])
+        # roughness is multiplied by 2^(-H) after each iteration to have a smoother result
         roughness = int(roughness * 2 ** (-H))
         points = next_points
 
     return points
 
-# normalization
 def normalize_heights(points):
+    """ Normalize the heights of the given heightmap to be within [0, IMAGE_HEIGHT] """
     min_height = min(points, key=lambda x: x[1])[1]
     max_height = max(points, key=lambda x: x[1])[1]
     height_range = max_height - min_height
@@ -43,6 +48,8 @@ def normalize_heights(points):
     return points
 
 def render_heights_to_png(points, filename):
+    """ Render the heightmap to an image and save it to a file"""
+    # add points (0, 0) and (IMAGE_WIDTH - 1, 0) in order to have a closed polygon that we can render
     points.insert(0, (0, 0))
     points.append((IMAGE_WIDTH - 1, 0))
 
@@ -53,8 +60,9 @@ def render_heights_to_png(points, filename):
     image.save(filename)
 
 def main():
-    H = 0.7
-    roughness = 20
+    """ Create a heightmap and render it"""
+    roughness = 200 # affects how "rough" the terrain will look (higher is "rougher")
+    H = 1 # affects how much roughness decreases each iteration, lower means slower
     points = generate_heights(roughness, H)
     points = normalize_heights(points)
     render_heights_to_png(points, "temp.png")
