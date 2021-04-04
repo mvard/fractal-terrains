@@ -25,11 +25,12 @@ def generate_heights(roughness, H):
         for i in range(0, len(points) - 1):
             # calculate midpoint of points[i] and points[i +1]
             midpoint_x = (points[i].x + points[i + 1].x)/2
-            # the height of the midpoint is displaced by a random number between [-roughness, roughness]
+            # displace midpoint height by a random number between [-roughness, roughness]
             midpoint_y = (points[i].y + points[i + 1].y)/2 + random.randint(-roughness, roughness)
             next_points.append(Point(midpoint_x, midpoint_y))
             next_points.append(points[i + 1])
         # roughness is multiplied by 2^(-H) after each iteration to have a smoother result
+        # This means it is a geometric series with alpha = roughness and r = 2^(-H)
         roughness = int(roughness * 2 ** (-H))
         points = next_points
 
@@ -47,9 +48,9 @@ def normalize_heights(points):
 
     return points
 
-def render_heights_to_png(points, filename):
+def render_heights_to_img(points, filename):
     """ Render the heightmap to an image and save it to a file"""
-    # add points (0, 0) and (IMAGE_WIDTH - 1, 0) in order to have a closed polygon that we can render
+    # add points (0, 0) and (IMAGE_WIDTH - 1, 0) to create a closed polygon that we can render
     points.insert(0, (0, 0))
     points.append((IMAGE_WIDTH - 1, 0))
 
@@ -65,7 +66,7 @@ def main():
     H = 1 # affects how much roughness decreases each iteration, lower means slower
     points = generate_heights(roughness, H)
     points = normalize_heights(points)
-    render_heights_to_png(points, "temp.png")
+    render_heights_to_img(points, "temp.png")
 
     sys.exit(0)
 
